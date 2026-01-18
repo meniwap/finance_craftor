@@ -1,0 +1,55 @@
+mode: paper  # backtest | paper | live
+
+logging:
+  level: INFO
+
+exchange:
+  kind: binance_futures_usdtm
+  base_url: "https://fapi.binance.com"
+  ws_base_url: "wss://fstream.binance.com"
+  recv_window_ms: 5000
+
+universe:
+  mode: top_n
+  quote_asset: USDT
+  top_n: 50
+  min_quote_volume_24h: 5000000
+  exclude: []
+  refresh_interval_sec: 3600
+
+market_data:
+  timeframe: 1m
+  candle_history: 500
+
+fees:
+  maker_fee_rate: 0.0002
+  taker_fee_rate: 0.0004
+  bnb_discount: 0.0
+  slippage_bps: 2.0
+
+risk:
+  live_enabled: false
+  max_total_positions: 10
+  max_total_notional_usdt: 2000
+  max_leverage: 3
+  daily_loss_limit_usdt: 50
+  loss_streak_limit: 5
+  min_liquidation_distance_pct: 5.0
+
+strategy:
+  name: rsi_mean_reversion
+  indicators:
+    rsi:
+      period: 14
+  signals:
+    rsi_threshold:
+      oversold: 30
+      overbought: 70
+  sizing:
+    kind: fixed_notional
+    notional_usdt: 20
+  exits:
+    tp_sl:
+      take_profit_pct: 0.4
+      stop_loss_pct: 0.8
+

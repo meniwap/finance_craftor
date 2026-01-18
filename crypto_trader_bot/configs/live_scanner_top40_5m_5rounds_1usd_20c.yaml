@@ -1,0 +1,126 @@
+mode: live
+
+logging:
+  level: INFO
+
+exchange:
+  kind: binance_futures_usdtm
+  base_url: "https://fapi.binance.com"
+  ws_base_url: "wss://fstream.binance.com"
+  recv_window_ms: 5000
+  leverage_default: 50
+
+universe:
+  mode: top_n
+  quote_asset: USDT
+  symbols: []
+  top_n: 40
+  min_quote_volume_24h: 20000000
+  exclude: ["BTCUSDT", "ETHUSDT"]
+  refresh_interval_sec: 3600
+
+market_data:
+  timeframe: 5m
+  candle_history: 600
+
+fees:
+  maker_fee_rate: 0.0002
+  taker_fee_rate: 0.0004
+  bnb_discount: 0.0
+  slippage_bps: 2.0
+
+risk:
+  live_enabled: true
+  max_total_positions: 1
+  max_total_notional_usdt: 100
+  max_leverage: 50
+  daily_loss_limit_usdt: 5
+  loss_streak_limit: 5
+  min_liquidation_distance_pct: 3.0
+
+strategy:
+  name: triple_confirm
+  indicators:
+    ema_fast:
+      period: 9
+    ema_slow:
+      period: 21
+    rsi:
+      period: 14
+    atr:
+      period: 14
+  signals:
+    scanner:
+      enabled: true
+      # Entry: last 50 candles of 1m (needed for MACD: 26+9=35)
+      entry_timeframe: 1m
+      entry_lookback: 50
+      entry_indicators:
+        ema_fast:
+          period: 5
+        ema_slow:
+          period: 13
+        rsi:
+          period: 14
+        atr:
+          period: 14
+
+      # Confirm trend also looks good on higher timeframes
+      confirm_timeframes: [15m]
+      confirm_history_limit: 200
+      confirm_indicators:
+        ema_fast:
+          period: 9
+        ema_slow:
+          period: 21
+        rsi:
+          period: 14
+        atr:
+          period: 14
+
+      history_limit: 300
+      exit_after_entry: false
+      exit_on_close: true
+      limit_offset_ticks: 2
+      # Allow trading while you (the human) keep a manual position open:
+      # - Exclude symbols that already have an open position
+      # - Apply portfolio limits only to bot-managed positions (so your manual notional won't block entries)
+      exclude_symbols_with_open_positions: true
+      risk_scope: bot
+
+      rounds: 5
+      avoid_consecutive_symbol: true
+      # NEW: once a symbol was traded in this 5-round run, don't trade it again until the run finishes
+      avoid_repeat_within_run: true
+      sleep_between_rounds_sec: 2
+      retry_on_no_match: true
+      retry_sleep_sec: 30
+
+      # NEW: make SL guaranteed-fill by using STOP_MARKET on trigger
+      sl_order_kind: market
+      # TP can stay limit conditional (you get price control)
+      tp_order_kind: limit
+
+    triple_confirm:
+      rsi_long_min: 52
+      # Focus on longs for now
+      long_only: true
+      # Avoid buying at "peak of peak": skip very high RSI
+      rsi_long_max: 70
+      # Avoid entries that are stretched too far above EMA (in ATR units)
+      max_extension_atr: 0.8
+      # Avoid huge impulse candles (often snap back)
+      max_candle_body_atr: 1.2
+      rsi_short_max: 45
+      # Targets per trade (gross, before fees)
+      tp_usdt: 0.20
+      sl_usdt: 0.20
+  sizing:
+    kind: fixed_notional
+    # ~$1 margin at 50x ~= 50 USDT notional
+    notional_usdt: 50
+  exits:
+    tp_sl:
+      take_profit_pct: 0.0
+      stop_loss_pct: 0.0
+

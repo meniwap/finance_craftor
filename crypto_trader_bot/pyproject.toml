@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-trader-bot"
+version = "0.1.0"
+description = "Modular Binance Futures multi-symbol trading bot (backtest/paper/live parity) with mandatory risk guards."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.6,<3",
+  "pyyaml>=6.0.1,<7",
+  "httpx>=0.26,<1",
+  "websockets>=12,<14",
+  "tenacity>=8.2,<9",
+  "numpy>=1.26,<3",
+  "pandas>=2.2,<3",
+  "fastapi>=0.110,<1",
+  "uvicorn>=0.27,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "pytest-asyncio>=0.23,<1",
+  "ruff>=0.6,<1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+

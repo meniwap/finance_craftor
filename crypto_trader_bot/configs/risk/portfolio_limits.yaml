@@ -1,0 +1,6 @@
+risk:
+  max_total_positions: 10
+  max_total_notional_usdt: 2000
+  daily_loss_limit_usdt: 50
+  loss_streak_limit: 5
+

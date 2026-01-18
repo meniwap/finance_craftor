@@ -1,0 +1,4 @@
+risk:
+  max_leverage: 3
+  min_liquidation_distance_pct: 5.0
+

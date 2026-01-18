@@ -1,0 +1,8 @@
+universe:
+  mode: top_n
+  quote_asset: USDT
+  top_n: 100
+  min_quote_volume_24h: 5000000
+  exclude: []
+  refresh_interval_sec: 3600
+

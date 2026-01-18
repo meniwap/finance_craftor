@@ -1,0 +1,67 @@
+mode: live
+
+logging:
+  level: INFO
+
+exchange:
+  kind: binance_futures_usdtm
+  base_url: "https://fapi.binance.com"
+  ws_base_url: "wss://fstream.binance.com"
+  recv_window_ms: 5000
+  leverage_default: 50
+
+universe:
+  quote_asset: USDT
+  symbols: ["WOOUSDT"]
+  mode: top_n
+  top_n: 1
+  min_quote_volume_24h: 0
+  exclude: []
+  refresh_interval_sec: 3600
+
+market_data:
+  timeframe: 5m
+  candle_history: 600
+
+fees:
+  maker_fee_rate: 0.0002
+  taker_fee_rate: 0.0004
+  bnb_discount: 0.0
+  slippage_bps: 2.0
+
+risk:
+  live_enabled: true
+  max_total_positions: 1
+  max_total_notional_usdt: 300
+  max_leverage: 50
+  daily_loss_limit_usdt: 20
+  loss_streak_limit: 5
+  min_liquidation_distance_pct: 3.0
+
+strategy:
+  name: triple_confirm
+  indicators:
+    ema_fast:
+      period: 9
+    ema_slow:
+      period: 21
+    rsi:
+      period: 14
+    atr:
+      period: 14
+  signals:
+    triple_confirm:
+      rsi_long_min: 55
+      rsi_short_max: 45
+      atr_tp_mult: 1.2
+      atr_sl_mult: 1.0
+  sizing:
+    kind: fixed_notional
+    # "5$ margin at 50x" ~= 250 USDT notional. Router will still enforce exchange mins.
+    notional_usdt: 250
+  exits:
+    # actual TP/SL are derived from ATR, these are placeholders for gating only
+    tp_sl:
+      take_profit_pct: 0.0
+      stop_loss_pct: 0.0
+

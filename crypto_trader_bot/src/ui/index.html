@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crypto Trader Bot - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg: #0a0e17;
+        --bg-gradient: linear-gradient(135deg, #0a0e17 0%, #0f1629 50%, #141d2f 100%);
+        --panel: linear-gradient(145deg, rgba(20,30,50,0.95) 0%, rgba(15,22,40,0.9) 100%);
+        --panel-solid: #121d30;
+        --panel-hover: rgba(30,45,75,0.8);
+        --border: rgba(100,130,200,0.15);
+        --border-active: rgba(90,200,255,0.5);
+        --text: #e8f0ff;
+        --text-dim: #8899bb;
+        --muted: #6680aa;
+        --accent: #00d4ff;
+        --accent-glow: rgba(0,212,255,0.25);
+        --accent2: #7b5cff;
+        --danger: #ff4d6d;
+        --danger-glow: rgba(255,77,109,0.25);
+        --success: #00e676;
+        --success-glow: rgba(0,230,118,0.25);
+        --warning: #ffc107;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        --shadow-glow: 0 0 30px var(--accent-glow);
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
+        margin: 0;
+        background: var(--bg-gradient);
+        background-attachment: fixed;
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.5;
+      }
+      a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+      a:hover { opacity: 0.8; }
+      ::selection { background: var(--accent); color: var(--bg); }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(100,130,200,0.3); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(100,130,200,0.5); }
+      
+      .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+      @media (max-width: 900px) {
+        .app { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+      }
+      
+      .sidebar {
+        background: var(--panel);
+        backdrop-filter: blur(20px);
+        padding: 20px 16px;
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 12px 0;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: var(--shadow-glow);
+      }
+      .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+      .nav button {
+        width: 100%;
+        text-align: right;
+        padding: 12px 16px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-dim);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: inherit;
+      }
+      .nav button:hover { background: var(--panel-hover); color: var(--text); }
+      .nav button.active {
+        background: linear-gradient(135deg, rgba(0,212,255,0.15) 0%, rgba(123,92,255,0.1) 100%);
+        border-color: var(--border-active);
+        color: var(--accent);
+        box-shadow: inset 0 0 20px var(--accent-glow);
+      }
+      .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+      .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+      .sidebar-footer .hint { font-size: 12px; color: var(--muted); line-height: 1.6; }
+      
+      .main { padding: 24px; overflow-y: auto; }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .header-title { font-size: 22px; font-weight: 700; }
+      .header-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .badge {
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(0,212,255,0.1);
+        border: 1px solid var(--border-active);
+        color: var(--accent);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+        50% { box-shadow: 0 0 15px 5px var(--accent-glow); }
+      }
+      
+      .card {
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+      .card:hover { border-color: rgba(100,130,200,0.25); }
+      .card-title {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-title-icon { font-size: 18px; opacity: 0.8; }
+      
+      .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+      .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+      
+      label {
+        display: block;
+        margin-top: 16px;
+        margin-bottom: 6px;
+        color: var(--text-dim);
+        font-size: 13px;
+        font-weight: 500;
+      }
+      label:first-child { margin-top: 0; }
+      input, select {
+        padding: 12px 14px;
+        width: 100%;
+        max-width: 400px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: rgba(10,15,25,0.6);
+        color: var(--text);
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      input:focus, select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      input::placeholder { color: var(--muted); }
+      input[type="checkbox"] {
+        width: auto;
+        margin-left: 8px;
+        accent-color: var(--accent);
+      }
+      
+      button {
+        padding: 12px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: rgba(20,30,50,0.8);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
+      button:hover {
+        background: var(--panel-hover);
+        border-color: rgba(100,130,200,0.3);
+        transform: translateY(-1px);
+      }
+      button:active { transform: translateY(0); }
+      button.primary {
+        background: linear-gradient(135deg, var(--accent) 0%, #00b8d4 100%);
+        border-color: transparent;
+        color: #0a0e17;
+        font-weight: 600;
+        box-shadow: 0 4px 15px var(--accent-glow);
+      }
+      button.primary:hover {
+        box-shadow: 0 6px 25px var(--accent-glow);
+        transform: translateY(-2px);
+      }
+      button.danger {
+        background: linear-gradient(135deg, var(--danger) 0%, #e63950 100%);
+        border-color: transparent;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 4px 15px var(--danger-glow);
+      }
+      button.success {
+        background: linear-gradient(135deg, var(--success) 0%, #00c853 100%);
+        border-color: transparent;
+        color: #0a0e17;
+        font-weight: 600;
+        box-shadow: 0 4px 15px var(--success-glow);
+      }
+      
+      .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+      
+      .hint { color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.6; }
+      .status pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: rgba(10,15,25,0.5);
+        padding: 14px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        font-size: 12px;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        max-height: 300px;
+        overflow: auto;
+        margin: 0;
+      }
+      
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        text-align: right;
+      }
+      th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      tr:hover td { background: rgba(100,130,200,0.05); }
+      
+      details { margin-top: 16px; }
+      summary {
+        color: var(--text-dim);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 0;
+        transition: color 0.2s;
+      }
+      summary:hover { color: var(--accent); }
+      details[open] summary { color: var(--accent); }
+      
+      .indicator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .indicator-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: rgba(10,15,25,0.4);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .indicator-item:hover { background: var(--panel-hover); }
+      .indicator-item.selected {
+        border-color: var(--accent);
+        background: rgba(0,212,255,0.1);
+      }
+      .indicator-item input { margin: 0; }
+      .indicator-item label { margin: 0; cursor: pointer; font-size: 13px; color: var(--text); }
+      
+      .stat-card {
+        background: rgba(10,15,25,0.4);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        text-align: center;
+      }
+      .stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+      .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+      
+      .hidden { display: none !important; }
+      
+      .preview-box {
+        background: linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(123,92,255,0.05) 100%);
+        border: 1px solid var(--border-active);
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      .preview-box .value { font-size: 20px; font-weight: 600; color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="sidebar">
+        <div class="brand">
+          <div class="brand-icon">🚀</div>
+          <span>Crypto Trader</span>
+        </div>
+        <div class="nav">
+          <button id="tabBtn_overview" class="active" onclick="showTab('overview')">
+            <span class="nav-icon">📊</span>דשבורד
+          </button>
+          <button id="tabBtn_sessions" onclick="showTab('sessions')">
+            <span class="nav-icon">⚙️</span>סשנים
+          </button>
+          <button id="tabBtn_manual" onclick="showTab('manual')">
+            <span class="nav-icon">🎯</span>מסחר ידני
+          </button>
+          <button id="tabBtn_stats" onclick="showTab('stats')">
+            <span class="nav-icon">📈</span>סטטיסטיקות
+          </button>
+          <button id="tabBtn_logs" onclick="showTab('logs')">
+            <span class="nav-icon">📋</span>לוגים
+          </button>
+          <button id="tabBtn_settings" onclick="showTab('settings')">
+            <span class="nav-icon">🔧</span>הגדרות
+          </button>
+        </div>
+        <div class="sidebar-footer">
+          <div class="hint">
+            💡 טיפ: אם הבוט לא נכנס לעסקאות — בדוק את הלוגים לראות מה חוסם.
+          </div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="header">
+          <div>
+            <div class="header-title">פאנל שליטה</div>
+            <div class="header-subtitle">ממשק מקומי לניהול הבוט — ללא צורך בעריכת קבצים</div>
+          </div>
+          <div class="badge" id="uiStatus">🟢 מוכן</div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="tab_settings" class="card hidden">
+          <div class="card-title">
+            <span class="card-title-icon">🔧</span>הגדרות מערכת
+          </div>
+          <label>קובץ קונפיגורציה (Base)</label>
+          <input id="configPath" value="configs/live_scanner_top40_5m_5rounds_1usd_20c.yaml" />
+          <div class="hint">הקובץ משמש כ-defaults. הסשנים נוצרים עם overrides מה-UI.</div>
+          <label>UI Token (אופציונלי)</label>
+          <input id="uiToken" placeholder="השאר ריק אם לא הוגדר אימות" />
+          <label style="display:flex;align-items:center;gap:8px;margin-top:16px">
+            <input type="checkbox" id="confirmLive" style="width:auto" />
+            <span>אישור מסחר Live (נדרש אם UI_REQUIRE_LIVE_CONFIRM=true)</span>
+          </label>
+          <div class="btn-group">
+            <button onclick="startBot()">🚀 הפעל בוט (Legacy)</button>
+            <button class="danger" onclick="stopBot()">⏹️ עצור בוט</button>
+          </div>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div id="tab_overview" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+            <div class="card-title" style="margin:0">
+              <span class="card-title-icon">📊</span>סקירת חשבון
+            </div>
+            <div class="btn-group" style="margin:0">
+              <button onclick="refreshState()">🔄 מצב</button>
+              <button onclick="refreshOpenOrders()">📋 פקודות</button>
+              <button onclick="refreshDecisions()">🧠 החלטות</button>
+              <button onclick="refreshFills()">✅ פילים</button>
+            </div>
+          </div>
+          <div class="grid2">
+            <div>
+              <div class="card" style="margin-bottom:16px;background:rgba(10,15,25,0.5)">
+                <div class="card-title" style="font-size:13px;color:var(--text-dim)">💰 יתרות</div>
+                <div id="balancesTable"></div>
+              </div>
+              <div class="card" style="margin-bottom:0;background:rgba(10,15,25,0.5)">
+                <div class="card-title" style="font-size:13px;color:var(--text-dim)">📈 פוזיציות פתוחות</div>
+                <div id="positionsTable"></div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:16px;background:rgba(10,15,25,0.5)">
+                <div class="card-title" style="font-size:13px;color:var(--text-dim)">📋 פקודות פתוחות</div>
+                <div id="openOrdersTable"></div>
+              </div>
+              <div class="card" style="margin-bottom:0;background:rgba(10,15,25,0.5)">
+                <div class="card-title" style="font-size:13px;color:var(--text-dim)">✅ פילים אחרונים</div>
+                <div id="fillsTable"></div>
+              </div>
+            </div>
+          </div>
+          <details>
+            <summary>🔍 Raw JSON (לדיבוג)</summary>
+            <div class="grid2" style="margin-top:12px">
+              <div class="status"><pre id="state"></pre></div>
+              <div class="status"><pre id="openOrders"></pre></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- SESSIONS -->
+        <div id="tab_sessions" class="card hidden">
+          <div class="card-title">
+            <span class="card-title-icon">⚙️</span>יצירת סשן מסחר
+          </div>
+          <div class="hint" style="margin-bottom:20px">בחר אינדיקטורים ← הגדר מרג׳ין ומינוף ← צור והפעל סשן</div>
+          
+          <div class="grid2">
+            <div>
+              <label>🎯 Preset (בחירה מהירה)</label>
+              <select id="preset" onchange="applyPreset()">
+                <option value="scalp">⚡ סקאלפ מהיר</option>
+                <option value="swing">📊 סווינג</option>
+                <option value="conservative">🛡️ שמרני</option>
+              </select>
+              
+              <label>🔗 מצב חיבור אינדיקטורים</label>
+              <select id="composeMode">
+                <option value="all">ALL — כל האינדיקטורים צריכים להסכים</option>
+                <option value="any">ANY — מספיק אחד</option>
+              </select>
+              
+              <label>📈 בחר אינדיקטורים לכניסה</label>
+              <div id="indicatorList" class="indicator-grid"></div>
+              
+              <label>📐 שיטת גודל עסקה</label>
+              <select id="sizingKind"></select>
+              
+              <div class="grid2" style="margin-top:16px">
+                <div>
+                  <label>💵 מרג׳ין (USDT)</label>
+                  <input id="marginUsdt" value="2" type="number" step="0.1" oninput="updatePreview()" />
+                </div>
+                <div>
+                  <label>⚡ מינוף</label>
+                  <input id="sessionLeverage" value="20" type="number" oninput="updatePreview()" />
+                </div>
+              </div>
+              
+              <div class="preview-box">
+                <div>גודל פוזיציה משוער:</div>
+                <div class="value" id="positionPreview">~40 USDT</div>
+                <div class="hint" style="margin-top:8px">מרג׳ין × מינוף = פוזיציה</div>
+              </div>
+              
+              <div class="grid2" style="margin-top:16px">
+                <div>
+                  <label>🎯 יעד רווח (USDT)</label>
+                  <input id="sessionTp" value="0.2" type="number" step="0.01" />
+                </div>
+                <div>
+                  <label>🛑 הפסד מקסימלי (USDT)</label>
+                  <input id="sessionSl" value="0.2" type="number" step="0.01" />
+                </div>
+              </div>
+              
+              <details style="margin-top:20px">
+                <summary>🔧 Advanced Exits (Anti-Whipsaw)</summary>
+                <div style="padding:16px 0">
+                  <div class="hint" style="margin-bottom:12px">מומלץ למינוף גבוה: שימוש ב-ATR להתאמת TP/SL לתנודתיות</div>
+                  
+                  <label style="display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="useAtrExits" checked style="width:auto" />
+                    <span>השתמש ב-ATR עבור TP/SL (במקום USDT קבוע)</span>
+                  </label>
+                  
+                  <div class="grid2" style="margin-top:12px">
+                    <div>
+                      <label>TP × ATR</label>
+                      <input id="tpAtrMult" value="2.0" type="number" step="0.1" />
+                    </div>
+                    <div>
+                      <label>SL × ATR</label>
+                      <input id="slAtrMult" value="1.5" type="number" step="0.1" />
+                    </div>
+                  </div>
+                  
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:12px">
+                    <input type="checkbox" id="ignoreFeesGate" style="width:auto" />
+                    <span>התעלם מ-Fees Breakeven Gate (לבדיקות בלבד)</span>
+                  </label>
+                  
+                  <div class="grid3" style="margin-top:12px">
+                    <div>
+                      <label>Break-even %</label>
+                      <input id="breakEvenPct" value="0" type="number" step="0.01" />
+                    </div>
+                    <div>
+                      <label>Trailing Stop %</label>
+                      <input id="trailingStopPct" value="0" type="number" step="0.01" />
+                    </div>
+                    <div>
+                      <label>Time-Stop (נרות)</label>
+                      <input id="timeStopCandles" value="0" type="number" />
+                    </div>
+                  </div>
+                </div>
+              </details>
+              
+              <div class="btn-group" style="margin-top:20px">
+                <button onclick="createSession()">📝 צור סשן</button>
+                <button class="primary" onclick="createSession(true)">🚀 צור + הפעל</button>
+              </div>
+              
+              <div class="status" style="margin-top:16px">
+                <pre id="sessionInfo"></pre>
+              </div>
+            </div>
+            
+            <div>
+              <div class="card" style="background:rgba(10,15,25,0.5);margin-bottom:16px">
+                <div class="card-title" style="font-size:14px">🎮 שליטה בסשן</div>
+                <label>מזהה סשן</label>
+                <input id="sessionId" placeholder="יושלם אוטומטית" />
+                <div class="btn-group">
+                  <button class="success" onclick="startSession()">▶️ Start</button>
+                  <button class="danger" onclick="stopSession()">⏹️ Stop</button>
+                  <button onclick="pauseSession()">⏸️ Pause</button>
+                  <button onclick="resumeSession()">▶️ Resume</button>
+                  <button onclick="cloneSession()">📋 שכפל</button>
+                </div>
+              </div>
+              
+              <div class="card" style="background:rgba(10,15,25,0.5)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                  <div class="card-title" style="font-size:14px;margin:0">📜 סשנים פעילים</div>
+                  <button onclick="refreshSessions()" style="padding:8px 12px;font-size:12px">🔄 רענן</button>
+                </div>
+                <div class="status"><pre id="sessionsList"></pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANUAL -->
+        <div id="tab_manual" class="card hidden">
+          <div class="card-title">
+            <span class="card-title-icon">🎯</span>מסחר ידני
+          </div>
+          <div class="hint" style="margin-bottom:20px">שלח פקודה ישירה לבורסה — עוקף את הלוגיקה של הסורק</div>
+          
+          <div class="grid2">
+            <div>
+              <label>🪙 סימבול</label>
+              <input id="symbol" placeholder="BTCUSDT" />
+              
+              <label>📍 כיוון</label>
+              <select id="side">
+                <option value="BUY">📈 BUY (Long)</option>
+                <option value="SELL">📉 SELL (Short)</option>
+              </select>
+            </div>
+            <div>
+              <label>💵 מרג׳ין (USDT)</label>
+              <input id="manualMarginUsdt" value="2" type="number" step="0.1" />
+              
+              <label>⚡ מינוף</label>
+              <input id="leverage" value="20" type="number" />
+            </div>
+          </div>
+          
+          <div class="grid2" style="margin-top:16px">
+            <div>
+              <label>🎯 יעד רווח (USDT)</label>
+              <input id="manualTp" value="0.2" type="number" step="0.01" />
+            </div>
+            <div>
+              <label>🛑 הפסד מקסימלי (USDT)</label>
+              <input id="manualSl" value="0.2" type="number" step="0.01" />
+            </div>
+          </div>
+          
+          <div class="btn-group" style="margin-top:24px">
+            <button class="primary" onclick="manualTrade()">🚀 שלח פקודה</button>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div id="tab_stats" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+            <div class="card-title" style="margin:0">
+              <span class="card-title-icon">📈</span>סטטיסטיקות ביצועים
+            </div>
+            <div class="btn-group" style="margin:0">
+              <select id="statsMode">
+                <option value="live">🔴 Live</option>
+                <option value="paper">📝 Paper</option>
+              </select>
+              <select id="statsDirection">
+                <option value="">📊 כל הכיוונים</option>
+                <option value="LONG">📈 Long</option>
+                <option value="SHORT">📉 Short</option>
+              </select>
+              <input id="statsTimeframe" placeholder="Timeframe" style="max-width:120px" />
+              <button onclick="refreshStats()">🔄 רענן</button>
+            </div>
+          </div>
+          
+          <div class="grid2" style="margin-bottom:20px">
+            <div class="card" style="background:rgba(10,15,25,0.5)">
+              <div class="card-title" style="font-size:13px;color:var(--text-dim)">🔥 Loss Streak Status</div>
+              <div class="status"><pre id="riskStatus"></pre></div>
+            </div>
+            <div class="card" style="background:rgba(10,15,25,0.5)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div class="card-title" style="font-size:13px;margin:0;color:var(--text-dim)">🚫 חסימות אחרונות</div>
+                <button onclick="refreshLastBlocks()" style="padding:6px 10px;font-size:11px">🔄</button>
+              </div>
+              <div class="status"><pre id="lastBlocks"></pre></div>
+            </div>
+          </div>
+          
+          <div class="card" style="background:rgba(10,15,25,0.5);margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="card-title" style="font-size:13px;margin:0;color:var(--text-dim)">📊 סיכום חסימות (Top Reasons)</div>
+              <button onclick="refreshBlockSummary()" style="padding:6px 10px;font-size:11px">🔄</button>
+            </div>
+            <div class="status"><pre id="blockSummary"></pre></div>
+            <div class="hint" id="blockHint"></div>
+          </div>
+          
+          <div class="card" style="background:rgba(10,15,25,0.5)">
+            <div class="card-title" style="font-size:13px;color:var(--text-dim)">📋 טבלת ביצועים</div>
+            <div id="statsTable"></div>
+          </div>
+          
+          <details>
+            <summary>🔍 Raw JSON</summary>
+            <div class="status" style="margin-top:12px"><pre id="statsRaw"></pre></div>
+          </details>
+        </div>
+
+        <!-- LOGS -->
+        <div id="tab_logs" class="card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+            <div class="card-title" style="margin:0">
+              <span class="card-title-icon">📋</span>לוגים ואירועים
+            </div>
+            <div class="btn-group" style="margin:0">
+              <button onclick="refreshDecisions()">🧠 החלטות</button>
+              <button onclick="refreshFills()">✅ פילים</button>
+            </div>
+          </div>
+          
+          <div class="grid2">
+            <div class="card" style="background:rgba(10,15,25,0.5)">
+              <div class="card-title" style="font-size:13px;color:var(--text-dim)">🧠 Decision Log</div>
+              <div class="hint" style="margin-bottom:12px">מראה למה הבוט נכנס או למה נחסם</div>
+              <div class="status"><pre id="decisions"></pre></div>
+            </div>
+            <div class="card" style="background:rgba(10,15,25,0.5)">
+              <div class="card-title" style="font-size:13px;color:var(--text-dim)">✅ Fills</div>
+              <div class="hint" style="margin-bottom:12px">פקודות שהתמלאו לאחרונה</div>
+              <div class="status"><pre id="fills"></pre></div>
+            </div>
+          </div>
+        </div>
+
+    <script>
+      function showTab(id) {
+        ["overview","sessions","manual","stats","logs","settings"].forEach((t) => {
+          document.getElementById(`tab_${t}`).classList.toggle("hidden", t !== id);
+          document.getElementById(`tabBtn_${t}`).classList.toggle("active", t === id);
+        });
+      }
+
+      function setUiStatus(text) {
+        const el = document.getElementById("uiStatus");
+        if (el) el.textContent = text;
+      }
+
+      function getUiToken() {
+        return (document.getElementById("uiToken")?.value || "").trim();
+      }
+
+      function isConfirmLive() {
+        return !!document.getElementById("confirmLive")?.checked;
+      }
+
+      async function apiFetch(path, opts={}) {
+        const headers = Object.assign({ "Content-Type": "application/json" }, (opts.headers || {}));
+        const tok = getUiToken();
+        if (tok) headers["X-UI-TOKEN"] = tok;
+        return await fetch(path, Object.assign({}, opts, { headers }));
+      }
+
+      function applyPreset() {
+        const p = document.getElementById("preset")?.value || "scalp";
+        const presets = {
+          scalp: { margin: 1, lev: 50, tp: 0.2, sl: 0.2, mode: "any", inds: ["ema_fast","ema_slow","rsi"], atr: true, tpAtr: 2.0, slAtr: 1.5, be: 0, trail: 0, tstop: 0, ignoreFees: false },
+          swing: { margin: 5, lev: 10, tp: 1.0, sl: 1.0, mode: "all", inds: ["ema_fast","ema_slow","rsi","adx"], atr: false, tpAtr: 0, slAtr: 0, be: 0, trail: 0, tstop: 0 },
+          conservative: { margin: 2, lev: 10, tp: 0.3, sl: 0.3, mode: "all", inds: ["ema_fast","ema_slow"], atr: false, tpAtr: 0, slAtr: 0, be: 0, trail: 0, tstop: 0 },
+        };
+        const cfg = presets[p] || presets.scalp;
+        document.getElementById("marginUsdt").value = String(cfg.margin);
+        document.getElementById("sessionLeverage").value = String(cfg.lev);
+        document.getElementById("sessionTp").value = String(cfg.tp);
+        document.getElementById("sessionSl").value = String(cfg.sl);
+        document.getElementById("composeMode").value = cfg.mode;
+        document.getElementById("useAtrExits").checked = !!cfg.atr;
+        document.getElementById("tpAtrMult").value = String(cfg.tpAtr ?? 0);
+        document.getElementById("slAtrMult").value = String(cfg.slAtr ?? 0);
+        document.getElementById("ignoreFeesGate").checked = !!cfg.ignoreFees;
+        document.getElementById("breakEvenPct").value = String(cfg.be ?? 0);
+        document.getElementById("trailingStopPct").value = String(cfg.trail ?? 0);
+        document.getElementById("timeStopCandles").value = String(cfg.tstop ?? 0);
+        document.querySelectorAll("#indicatorList input[type=checkbox]").forEach((cb) => {
+          cb.checked = cfg.inds.includes(cb.value);
+        });
+        syncIndicatorSelections();
+        updatePreview();
+      }
+
+      function syncIndicatorSelections() {
+        document.querySelectorAll("#indicatorList .indicator-item").forEach((wrap) => {
+          const cb = wrap.querySelector("input[type=checkbox]");
+          if (!cb) return;
+          wrap.classList.toggle("selected", !!cb.checked);
+        });
+      }
+
+      function parseNum(id, name, opts={}) {
+        const raw = document.getElementById(id).value;
+        const v = Number(raw);
+        if (!isFinite(v)) throw new Error(`${name} חייב להיות מספר`);
+        if (opts.min !== undefined && v < opts.min) throw new Error(`${name} חייב להיות >= ${opts.min}`);
+        if (opts.max !== undefined && v > opts.max) throw new Error(`${name} חייב להיות <= ${opts.max}`);
+        return v;
+      }
+
+      async function loadRegistries() {
+        const ind = await (await fetch("/registry/indicators")).json();
+        const sizing = await (await fetch("/registry/sizing")).json();
+
+        const list = document.getElementById("indicatorList");
+        list.innerHTML = "";
+        const supported = new Set(["ema_fast", "ema_slow", "rsi", "macd", "vwap", "adx", "atr"]);
+        const icons = { ema_fast: "📈", ema_slow: "📉", rsi: "🔄", macd: "📊", vwap: "💹", adx: "📐", atr: "📏" };
+        ind.items.forEach((i) => {
+          if (!supported.has(i.name)) return; // Only show supported indicators
+          const id = `ind_${i.name}`;
+          const wrap = document.createElement("div");
+          wrap.className = "indicator-item";
+          wrap.onclick = () => {
+            const cb = wrap.querySelector('input');
+            cb.checked = !cb.checked;
+            wrap.classList.toggle('selected', cb.checked);
+          };
+          const icon = icons[i.name] || "📌";
+          const hint = i.name === "atr" ? " (יציאה)" : "";
+          wrap.innerHTML = `<input type="checkbox" id="${id}" value="${i.name}" style="pointer-events:none"/><label style="pointer-events:none">${icon} ${i.label}${hint}</label>`;
+          list.appendChild(wrap);
+        });
+        syncIndicatorSelections();
+
+        const sizingSelect = document.getElementById("sizingKind");
+        sizingSelect.innerHTML = "";
+        sizing.items.forEach((s) => {
+          const opt = document.createElement("option");
+          opt.value = s.name;
+          opt.textContent = s.label;
+          sizingSelect.appendChild(opt);
+        });
+      }
+
+      async function startBot() {
+        const configPath = document.getElementById("configPath").value;
+        const res = await apiFetch("/start", {
+          method: "POST",
+          body: JSON.stringify({ config_path: configPath, confirm_live: isConfirmLive() })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert("שגיאה: " + (data.detail || JSON.stringify(data))); return; }
+        alert(JSON.stringify(data));
+      }
+
+      async function stopBot() {
+        const res = await apiFetch("/stop", { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) { alert("שגיאה: " + (data.detail || JSON.stringify(data))); return; }
+        alert(JSON.stringify(data));
+      }
+
+      async function manualTrade() {
+        let margin, lev, tp, sl;
+        try {
+          margin = parseNum("manualMarginUsdt", "מרג׳ין", { min: 0.01 });
+          lev = parseInt(document.getElementById("leverage").value, 10);
+          if (!isFinite(lev) || lev < 1) throw new Error("מינוף חייב להיות מספר חיובי");
+          tp = parseNum("manualTp", "יעד רווח", { min: 0 });
+          sl = parseNum("manualSl", "הפסד מקסימלי", { min: 0 });
+        } catch (e) {
+          alert("שגיאה: " + e.message);
+          return;
+        }
+        const notional = margin * lev;
+        const symbolVal = (document.getElementById("symbol").value || "").trim().toUpperCase();
+        if (!symbolVal) {
+          alert("שגיאה: חסר סימבול (למשל BTCUSDT)");
+          return;
+        }
+        const payload = {
+          config_path: document.getElementById("configPath").value,
+          session_id: document.getElementById("sessionId").value || undefined,
+          symbol: symbolVal,
+          side: document.getElementById("side").value,
+          notional_usdt: notional,
+          tp_usdt: tp,
+          sl_usdt: sl,
+          leverage: lev
+        };
+        const res = await apiFetch("/manual_intent", {
+          method: "POST",
+          body: JSON.stringify({ ...payload, confirm_live: isConfirmLive() })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+      }
+
+      function updatePreview() {
+        const margin = parseFloat(document.getElementById("marginUsdt").value) || 0;
+        const lev = parseInt(document.getElementById("sessionLeverage").value, 10) || 0;
+        const pos = margin * lev;
+        const el = document.getElementById("positionPreview");
+        if (el) el.textContent = `~${pos.toFixed(2)} USDT`;
+      }
+
+      async function createSession(andStart=false) {
+        const configPath = document.getElementById("configPath").value;
+        const indicators = [];
+        document.querySelectorAll("#indicatorList input[type=checkbox]").forEach((cb) => {
+          if (cb.checked) indicators.push(cb.value);
+        });
+        // Build rules only from what the user selected (no hidden “3 indicators”)
+        const rules = [];
+        if (indicators.includes("ema_fast") && indicators.includes("ema_slow")) {
+          rules.push({ type: "ema_trend", fast: "ema_fast", slow: "ema_slow" });
+        }
+        if (indicators.includes("rsi")) {
+          rules.push({ type: "rsi_threshold", key: "rsi", long_min: 52, short_max: 45 });
+        }
+        if (indicators.includes("macd")) {
+          rules.push({ type: "macd_signal" });
+        }
+        if (indicators.includes("vwap")) {
+          rules.push({ type: "vwap_filter" });
+        }
+        if (indicators.includes("adx")) {
+          rules.push({ type: "adx_min", min: 15 });
+        }
+        if (rules.length === 0) {
+          alert("לא נבחר כלל כניסה תקין.\nנבחרו: " + (indicators.join(", ") || "(כלום)") +
+                "\nכדי להיכנס צריך לפחות אחד מהבאים:\n- EMA מהיר + EMA איטי\n- RSI\n- MACD\n- VWAP\n- ADX");
+          return;
+        }
+        // If user intends EMA trend, require both
+        if ((indicators.includes("ema_fast") || indicators.includes("ema_slow")) &&
+            !(indicators.includes("ema_fast") && indicators.includes("ema_slow")) &&
+            rules.length === 0) {
+          alert("כדי להשתמש בכלל טרנד (EMA) צריך לסמן גם EMA מהיר וגם EMA איטי.");
+          return;
+        }
+
+        let margin, lev, tp, sl;
+        try {
+          margin = parseNum("marginUsdt", "מרג׳ין", { min: 0.01 });
+          lev = parseInt(document.getElementById("sessionLeverage").value, 10);
+          if (!isFinite(lev) || lev < 1) throw new Error("מינוף חייב להיות מספר חיובי");
+          tp = parseNum("sessionTp", "יעד רווח", { min: 0 });
+          sl = parseNum("sessionSl", "הפסד מקסימלי", { min: 0 });
+        } catch (e) {
+          alert("שגיאה: " + e.message);
+          return;
+        }
+        const notional = margin * lev;
+        const useAtr = !!document.getElementById("useAtrExits")?.checked;
+        const tpAtrMult = parseNum("tpAtrMult", "TP ATR Mult", { min: 0 });
+        const slAtrMult = parseNum("slAtrMult", "SL ATR Mult", { min: 0 });
+        const ignoreFeesGate = !!document.getElementById("ignoreFeesGate")?.checked;
+        const breakEvenPct = parseNum("breakEvenPct", "Break-even %", { min: 0 });
+        const trailingStopPct = parseNum("trailingStopPct", "Trailing %", { min: 0 });
+        const timeStopCandles = parseInt(document.getElementById("timeStopCandles").value, 10) || 0;
+
+        // ATR exits require ATR to be computed even if it doesn't affect entry rules.
+        if (useAtr && !indicators.includes("atr")) {
+          indicators.push("atr");
+        }
+
+        // Make ALL/ANY actually work:
+        // - Build ONE rule_combo per rule (child)
+        // - Wrap in composite (when >1 rules) so mode controls agreement
+        const mode = document.getElementById("composeMode").value;
+        const baseChild = {
+          indicators: indicators.reduce((acc, name) => {
+            acc[name] = {};
+            return acc;
+          }, {}),
+          sizing: {
+            kind: document.getElementById("sizingKind").value,
+            notional_usdt: notional
+          },
+          exits: { tp_sl: { take_profit_pct: 0, stop_loss_pct: 0 } }
+        };
+        // Put ALL rules in ONE strategy - all indicators must pass together
+        const singleChild = {
+          name: "rule_combo",
+          ...baseChild,
+          signals: {
+            rule_combo: {
+              rules: rules,
+              long_only: true,
+              tp_usdt: tp,
+              sl_usdt: sl,
+              tp_atr_mult: useAtr ? tpAtrMult : 0,
+              sl_atr_mult: useAtr ? slAtrMult : 0,
+              ignore_fees_gate: ignoreFeesGate,
+              break_even_pct: breakEvenPct,
+              trailing_stop_pct: trailingStopPct,
+              time_stop_candles: timeStopCandles
+            }
+          }
+        };
+        const strategyComposer = {
+          mode: mode,
+          selections: [singleChild]
+        };
+
+        const res = await apiFetch("/sessions/from_ui", {
+          method: "POST",
+          body: JSON.stringify({
+            base_config_path: configPath,
+            // Make scanner compute the indicators from the session strategy (not the old fixed entry_indicators)
+            overrides: {
+              exchange: { leverage_default: lev },
+              // Also: default to NO confirm_timeframes for UI sessions (15m confirm in YAML is often too strict).
+              strategy: { signals: { scanner: { entry_indicators: null, confirm_indicators: null, confirm_timeframes: [] } } }
+            },
+            strategy_composer: strategyComposer
+          })
+        });
+        const data = await res.json();
+        document.getElementById("sessionInfo").textContent = JSON.stringify(data, null, 2);
+        if (!res.ok) {
+          alert("שגיאה ביצירת סשן: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        if (data.session_id) {
+          document.getElementById("sessionId").value = data.session_id;
+          await refreshSessionStatus();
+          if (andStart) {
+            await startSession();
+          }
+        }
+      }
+
+      async function startSession() {
+        const id = document.getElementById("sessionId").value;
+        const res = await apiFetch(`/sessions/${id}/start?confirm_live=${isConfirmLive() ? "true" : "false"}`, { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+        await refreshSessionStatus();
+      }
+      async function stopSession() {
+        const id = document.getElementById("sessionId").value;
+        const res = await apiFetch(`/sessions/${id}/stop`, { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+        await refreshSessionStatus();
+      }
+      async function pauseSession() {
+        const id = document.getElementById("sessionId").value;
+        const res = await apiFetch(`/sessions/${id}/pause`, { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+        await refreshSessionStatus();
+      }
+      async function resumeSession() {
+        const id = document.getElementById("sessionId").value;
+        const res = await apiFetch(`/sessions/${id}/resume`, { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+        await refreshSessionStatus();
+      }
+
+      async function refreshState() {
+        const configPath = document.getElementById("configPath").value;
+        const res = await fetch(`/state?config_path=${encodeURIComponent(configPath)}`);
+        const data = await res.json();
+        document.getElementById("state").textContent = JSON.stringify(data, null, 2);
+        renderBalances(data.balances || []);
+        renderPositions(data.positions || []);
+      }
+
+      async function refreshDecisions() {
+        const res = await fetch(`/decisions?limit=50`);
+        const data = await res.json();
+        document.getElementById("decisions").textContent = JSON.stringify(data.items || [], null, 2);
+      }
+
+      async function refreshFills() {
+        const res = await fetch(`/fills?limit=50`);
+        const data = await res.json();
+        document.getElementById("fills").textContent = JSON.stringify(data.items || [], null, 2);
+        renderFills(data.items || []);
+      }
+
+      async function refreshOpenOrders() {
+        const configPath = document.getElementById("configPath").value;
+        const res = await fetch(`/open_orders?config_path=${encodeURIComponent(configPath)}`);
+        const data = await res.json();
+        document.getElementById("openOrders").textContent = JSON.stringify(data, null, 2);
+        renderOpenOrders(data);
+      }
+
+      async function refreshSessions() {
+        const res = await fetch(`/sessions`);
+        const data = await res.json();
+        document.getElementById("sessionsList").textContent = JSON.stringify(data.items || [], null, 2);
+      }
+
+      async function refreshSessionStatus() {
+        const id = document.getElementById("sessionId").value;
+        if (!id) return;
+        const res = await fetch(`/sessions/${id}`);
+        const data = await res.json();
+        document.getElementById("sessionInfo").textContent = JSON.stringify(data, null, 2);
+      }
+
+      async function cloneSession() {
+        const id = document.getElementById("sessionId").value;
+        const res = await apiFetch(`/sessions/${id}/clone`, { method: "POST", body: "{}" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("שגיאה: " + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        alert(JSON.stringify(data));
+        if (data.session_id) document.getElementById("sessionId").value = data.session_id;
+        await refreshSessionStatus();
+      }
+
+      loadRegistries().then(applyPreset);
+
+      function renderTable(containerId, rows, columns) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        if (!rows || rows.length === 0) {
+          el.innerHTML = `<div class="hint">(אין נתונים)</div>`;
+          return;
+        }
+        const thead = `<tr>` + columns.map((c) => `<th>${c.label}</th>`).join("") + `</tr>`;
+        const tbody = rows.map((r) => {
+          return `<tr>` + columns.map((c) => `<td>${c.format ? c.format(r[c.key], r) : (r[c.key] ?? "")}</td>`).join("") + `</tr>`;
+        }).join("");
+        el.innerHTML = `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+      }
+
+      function renderBalances(balances) {
+        const filtered = (balances || []).filter((b) => {
+          const total = (Number(b.free || 0) + Number(b.locked || 0));
+          return total > 0;
+        });
+        renderTable("balancesTable", filtered, [
+          { key: "asset", label: "Asset" },
+          { key: "free", label: "Free", format: (v) => Number(v || 0).toFixed(4) },
+          { key: "locked", label: "Locked", format: (v) => Number(v || 0).toFixed(4) },
+        ]);
+      }
+
+      function renderPositions(positions) {
+        const filtered = (positions || []).filter((p) => Math.abs(Number(p.quantity || 0)) > 0);
+        renderTable("positionsTable", filtered, [
+          { key: "symbol", label: "Symbol" },
+          { key: "position_side", label: "Side" },
+          { key: "quantity", label: "Qty", format: (v) => Number(v || 0).toFixed(6) },
+          { key: "entry_price", label: "Entry", format: (v) => Number(v || 0).toFixed(6) },
+          { key: "mark_price", label: "Mark", format: (v) => Number(v || 0).toFixed(6) },
+          { key: "unrealized_pnl", label: "uPnL", format: (v) => Number(v || 0).toFixed(4) },
+        ]);
+      }
+
+      function renderOpenOrders(payload) {
+        const rows = [];
+        (payload.regular || []).forEach((o) => rows.push({ kind: "REG", symbol: o.symbol, side: o.side, type: o.type, price: o.price, qty: o.origQty, status: o.status }));
+        (payload.algo || []).forEach((o) => rows.push({ kind: "ALGO", symbol: o.symbol, side: o.side, type: o.type, price: o.price, qty: o.quantity, status: o.status }));
+        renderTable("openOrdersTable", rows, [
+          { key: "kind", label: "Kind" },
+          { key: "symbol", label: "Symbol" },
+          { key: "side", label: "Side" },
+          { key: "type", label: "Type" },
+          { key: "price", label: "Price" },
+          { key: "qty", label: "Qty" },
+          { key: "status", label: "Status" },
+        ]);
+      }
+
+      function renderFills(items) {
+        renderTable("fillsTable", (items || []).slice(0, 15), [
+          { key: "time", label: "Time" },
+          { key: "symbol", label: "Symbol" },
+          { key: "side", label: "Side" },
+          { key: "price", label: "Price", format: (v) => Number(v || 0).toFixed(6) },
+          { key: "quantity", label: "Qty", format: (v) => Number(v || 0).toFixed(6) },
+          { key: "fee_paid", label: "Fee", format: (v) => Number(v || 0).toFixed(6) },
+        ]);
+      }
+
+      function renderStatsTable(items) {
+        renderTable("statsTable", items || [], [
+          { key: "mode", label: "Mode" },
+          { key: "timeframe", label: "TF" },
+          { key: "direction", label: "Dir" },
+          { key: "rules_hash", label: "Rules" },
+          { key: "trades", label: "Trades" },
+          { key: "wins", label: "Wins" },
+          { key: "losses", label: "Losses" },
+          { key: "win_rate", label: "Win%", format: (v) => (Number(v || 0) * 100).toFixed(1) + "%" },
+          { key: "total_pnl", label: "PnL", format: (v) => Number(v || 0).toFixed(4) },
+          { key: "avg_pnl", label: "Avg", format: (v) => Number(v || 0).toFixed(4) },
+        ]);
+      }
+
+      async function showRulesDetails(rulesHash) {
+        const mode = document.getElementById("statsMode").value;
+        const res = await apiFetch(`/stats/details?rules_hash=${encodeURIComponent(rulesHash)}&mode=${encodeURIComponent(mode)}&limit=20`);
+        const data = await res.json();
+        alert(JSON.stringify(data.items || [], null, 2));
+      }
+
+      async function refreshRiskStatus() {
+        const configPath = document.getElementById("configPath").value;
+        const mode = document.getElementById("statsMode").value;
+        const res = await apiFetch(`/risk_status?config_path=${encodeURIComponent(configPath)}&mode=${encodeURIComponent(mode)}`);
+        const data = await res.json();
+        document.getElementById("riskStatus").textContent = JSON.stringify(data, null, 2);
+      }
+
+      async function refreshStats() {
+        const mode = document.getElementById("statsMode").value;
+        const direction = document.getElementById("statsDirection").value;
+        const tf = (document.getElementById("statsTimeframe").value || "").trim();
+        const qs = new URLSearchParams();
+        qs.set("mode", mode);
+        if (direction) qs.set("direction", direction);
+        if (tf) qs.set("timeframe", tf);
+        const res = await apiFetch(`/stats?${qs.toString()}`);
+        const data = await res.json();
+        document.getElementById("statsRaw").textContent = JSON.stringify(data.items || [], null, 2);
+        const rows = (data.items || []).map((r) => {
+          // attach a "details" action via rules_hash
+          return { ...r, details: "פתח" };
+        });
+        // custom render with details column
+        const el = document.getElementById("statsTable");
+        if (el) {
+          const cols = [
+            { key: "mode", label: "Mode" },
+            { key: "timeframe", label: "TF" },
+            { key: "direction", label: "Dir" },
+            { key: "rules_hash", label: "Rules" },
+            { key: "trades", label: "Trades" },
+            { key: "wins", label: "Wins" },
+            { key: "losses", label: "Losses" },
+            { key: "win_rate", label: "Win%", format: (v) => (Number(v || 0) * 100).toFixed(1) + "%" },
+            { key: "total_pnl", label: "PnL", format: (v) => Number(v || 0).toFixed(4) },
+            { key: "avg_pnl", label: "Avg", format: (v) => Number(v || 0).toFixed(4) },
+          ];
+          const thead = `<tr>` + cols.map((c) => `<th>${c.label}</th>`).join("") + `<th>Details</th></tr>`;
+          const tbody = rows.map((r) => {
+            const tds = cols.map((c) => `<td>${c.format ? c.format(r[c.key], r) : (r[c.key] ?? "")}</td>`).join("");
+            const btn = `<button onclick="showRulesDetails('${r.rules_hash}')">פתח</button>`;
+            return `<tr>${tds}<td>${btn}</td></tr>`;
+          }).join("");
+          el.innerHTML = `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+        }
+        await refreshRiskStatus();
+      }
+
+      async function refreshLastBlocks() {
+        const res = await apiFetch(`/last_blocks?limit=30`);
+        const data = await res.json();
+        document.getElementById("lastBlocks").textContent = JSON.stringify(data.items || [], null, 2);
+      }
+
+      async function refreshBlockSummary() {
+        const res = await apiFetch(`/block_summary?limit=200`);
+        const data = await res.json();
+        document.getElementById("blockSummary").textContent = JSON.stringify(data, null, 2);
+        // quick suggestions
+        const counts = data.counts || [];
+        const top = counts.length ? counts[0][0] : "";
+        let hint = "";
+        if (top === "loss_streak") hint = "הצעה: loss streak הופעל. או לחכות לרווח שיאפס, או להעלות limit (בזהירות), או להפעיל cooldown/pause.";
+        if (top === "portfolio_limits") hint = "הצעה: portfolio limits חוסם. בדוק max_total_notional_usdt/max_total_positions או סגור פוזיציות פתוחות.";
+        if (top === "fees") hint = "הצעה: breakeven gate/fees חוסם. תגדיל TP או תקטין עלויות.";
+        document.getElementById("blockHint").textContent = hint;
+      }
+
+      document.addEventListener("input", (e) => {
+        if (["marginUsdt","sessionLeverage"].includes(e.target.id)) updatePreview();
+      });
+      updatePreview();
+      // initial dashboard refresh (best-effort)
+      refreshState();
+      refreshDecisions();
+      setInterval(refreshSessionStatus, 2000);
+    </script>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+execution:
+  kind: market_fast
+  max_slippage_bps: 10.0
+

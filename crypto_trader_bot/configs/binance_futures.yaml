@@ -1,0 +1,9 @@
+exchange:
+  kind: binance_futures_usdtm
+  # isolated | cross
+  margin_mode: isolated
+  # one_way | hedge
+  position_mode: one_way
+  leverage_default: 2
+  hedge_mode: false
+

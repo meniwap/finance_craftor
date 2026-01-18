@@ -1,0 +1,17 @@
+strategy:
+  name: rsi_mean_reversion
+  indicators:
+    rsi:
+      period: 14
+  signals:
+    rsi_threshold:
+      oversold: 30
+      overbought: 70
+  sizing:
+    kind: fixed_notional
+    notional_usdt: 20
+  exits:
+    tp_sl:
+      take_profit_pct: 0.4
+      stop_loss_pct: 0.8
+
