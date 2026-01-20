@@ -21,6 +21,7 @@ class RuleComboStrategy:
     notional_usdt: float
     long_only: bool = True
     short_only: bool = False
+    invert_signals: bool = False
     tp_usdt: float | None = None
     sl_usdt: float | None = None
     tp_atr_mult: float | None = None
@@ -123,40 +124,60 @@ class RuleComboStrategy:
             can_buy = can_buy and buy_ok
             can_sell = can_sell and sell_ok
 
-        # ALWAYS log evaluation results so user can see why entry was blocked
-        if ready_all:
-            if can_buy or can_sell:
-                log.info(
-                    "✅ %s PASS: rules=%s results=%s => can_buy=%s can_sell=%s",
-                    candle.symbol,
-                    [r.get("type") for r in self.rules],
-                    [(rtype, ready, buy, sell) for rtype, ready, buy, sell in rule_results],
-                    can_buy,
-                    can_sell,
-                )
-            else:
-                log.info(
-                    "❌ %s BLOCKED: rules=%s results=%s => no signal (blocked_by=%s)",
-                    candle.symbol,
-                    [r.get("type") for r in self.rules],
-                    [(rtype, ready, buy, sell) for rtype, ready, buy, sell in rule_results],
-                    blocked_by,
-                )
-        else:
+        if not ready_all:
             log.info(
                 "⏳ %s NOT READY: rules=%s (blocked_by=%s)",
                 candle.symbol,
                 [r.get("type") for r in self.rules],
                 blocked_by,
             )
-
-        if not ready_all:
             return []
+
+        raw_buy = bool(can_buy)
+        raw_sell = bool(can_sell)
+
+        # Contrarian mode: swap BUY/SELL signals (LONG <-> SHORT)
+        if self.invert_signals:
+            can_buy, can_sell = can_sell, can_buy
 
         if self.long_only:
             can_sell = False
         if self.short_only:
             can_buy = False
+
+        final_buy = bool(can_buy)
+        final_sell = bool(can_sell)
+
+        # ALWAYS log evaluation results so user can see why entry was blocked (raw vs final after modifiers)
+        if final_buy or final_sell:
+            log.info(
+                "✅ %s PASS: rules=%s results=%s raw=(buy=%s sell=%s) final=(buy=%s sell=%s) invert=%s long_only=%s short_only=%s",
+                candle.symbol,
+                [r.get("type") for r in self.rules],
+                [(rtype, ready, buy, sell) for rtype, ready, buy, sell in rule_results],
+                raw_buy,
+                raw_sell,
+                final_buy,
+                final_sell,
+                bool(self.invert_signals),
+                bool(self.long_only),
+                bool(self.short_only),
+            )
+        else:
+            log.info(
+                "❌ %s BLOCKED: rules=%s results=%s raw=(buy=%s sell=%s) final=(buy=%s sell=%s) invert=%s long_only=%s short_only=%s (blocked_by=%s)",
+                candle.symbol,
+                [r.get("type") for r in self.rules],
+                [(rtype, ready, buy, sell) for rtype, ready, buy, sell in rule_results],
+                raw_buy,
+                raw_sell,
+                final_buy,
+                final_sell,
+                bool(self.invert_signals),
+                bool(self.long_only),
+                bool(self.short_only),
+                blocked_by,
+            )
 
         meta: dict[str, Any] = {}
         if self.tp_usdt is not None:

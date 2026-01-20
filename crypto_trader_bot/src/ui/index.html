@@ -455,6 +455,12 @@
                 <option value="all">ALL — כל האינדיקטורים צריכים להסכים</option>
                 <option value="any">ANY — מספיק אחד</option>
               </select>
+
+              <label style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                <input type="checkbox" id="invertSignals" style="width:auto" />
+                <span>🔁 הפוך כיוון (Contrarian) — אם האינדיקטורים אומרים LONG נכנס SHORT ולהפך</span>
+              </label>
+              <div class="hint">כשמסומן: הבוט יאפשר גם שורטים בסשן הזה ויהפוך את ה‑signals.</div>
               
               <label>📈 בחר אינדיקטורים לכניסה</label>
               <div id="indicatorList" class="indicator-grid"></div>
@@ -733,6 +739,7 @@
         document.getElementById("sessionTp").value = String(cfg.tp);
         document.getElementById("sessionSl").value = String(cfg.sl);
         document.getElementById("composeMode").value = cfg.mode;
+        document.getElementById("invertSignals").checked = false;
         document.getElementById("useAtrExits").checked = !!cfg.atr;
         document.getElementById("tpAtrMult").value = String(cfg.tpAtr ?? 0);
         document.getElementById("slAtrMult").value = String(cfg.slAtr ?? 0);
@@ -871,6 +878,7 @@
         document.querySelectorAll("#indicatorList input[type=checkbox]").forEach((cb) => {
           if (cb.checked) indicators.push(cb.value);
         });
+        const invertSignals = !!document.getElementById("invertSignals")?.checked;
         // Build rules only from what the user selected (no hidden “3 indicators”)
         const rules = [];
         if (indicators.includes("ema_fast") && indicators.includes("ema_slow")) {
@@ -948,7 +956,9 @@
           signals: {
             rule_combo: {
               rules: rules,
-              long_only: true,
+              // default is long-only; contrarian mode requires shorts too
+              long_only: invertSignals ? false : true,
+              invert_signals: invertSignals,
               tp_usdt: tp,
               sl_usdt: sl,
               tp_atr_mult: useAtr ? tpAtrMult : 0,
